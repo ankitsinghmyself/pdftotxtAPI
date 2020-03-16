@@ -40,7 +40,7 @@ ALLOWED_EXTENSIONS = set(['pdf'])
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 	
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])
 def index():
 	if request.method == 'POST':
         # check if the post request has the file part
