@@ -75,7 +75,7 @@ def index():
 			#flash(string)
 			return string
 		else:
-			flash('Allowed file types is pdf')
+			# flash('Allowed file types is pdf')
 			return redirect(url_for('index'))
 	return render_template('index.html')		
 
