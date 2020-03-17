@@ -32,10 +32,8 @@ import pathlib,os
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/tmp'
-DOWNLOAD_FOLDER = '/tmp'
 app.secret_key = "1234"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['pdf'])
 
@@ -78,10 +76,11 @@ def uploaded_file():
 				#fp.close()
 				#device.close()
 				string = retstr.getvalue()
+				new_str = re.sub('[^a-zA-Z0-9\n]', ' ', string)
 				#retstr.close()
-			return string
+			return new_str
 		else:
 			#flash('Allowed file types is pdf')
 			return redirect(url_for('index'))
 if __name__ == "__main__":
-    app.run(debug="true")
+    app.run()
