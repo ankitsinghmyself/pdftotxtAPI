@@ -32,15 +32,17 @@ import pathlib,os
 app = Flask(__name__)
 
 UPLOAD_FOLDER = '/tmp'
+DOWNLOAD_FOLDER = '/tmp'
 app.secret_key = "1234"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = set(['pdf'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 	
-@app.route('/', methods=['GET','POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
 	if request.method == 'POST':
         # check if the post request has the file part
@@ -54,30 +56,35 @@ def index():
 		elif file and allowed_file(file.filename):
 			filename = secure_filename(file.filename)
 			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-			#convert function pdf to text
-			rsrcmgr = PDFResourceManager()
-			retstr = StringIO()
-			laparams = LAParams()
-			device = TextConverter(rsrcmgr, retstr, laparams=laparams)
-			pdf_file = "/tmp/" + filename
-			fp = open(pdf_file, 'rb')
-			interpreter = PDFPageInterpreter(rsrcmgr, device)
-			password = ""
-			maxpages = 0
-			caching = True
-			pagenos=set()
-			for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password,caching=caching, check_extractable=True):
-				interpreter.process_page(page)
-			fp.close()
-			device.close()
-			string = retstr.getvalue()
-			retstr.close()
-			#flash(string)
-			return string
+			text_file_path = filename
+			
+			return redirect(url_for('uploaded_file', filename=text_file_path))
 		else:
-			# flash('Allowed file types is pdf')
+			flash('Allowed file types is pdf')
 			return redirect(url_for('index'))
-	return render_template('index.html')		
+	return render_template('index.html')
+@app.route('/tmp/<filename>')
+def uploaded_file(filename):
+	#convert function pdf to text
+	rsrcmgr = PDFResourceManager()
+	retstr = StringIO()
+	laparams = LAParams()
+	device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+	pdf_file = "/tmp/" + filename
+	fp = open(pdf_file, 'rb')
+	interpreter = PDFPageInterpreter(rsrcmgr, device)
+	password = ""
+	maxpages = 0
+	caching = True
+	pagenos=set()
+	string=""
+	for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password,caching=caching, check_extractable=True):
 
+		interpreter.process_page(page)
+		#fp.close()
+		#device.close()
+		string = retstr.getvalue()
+		#retstr.close()
+	return string
 if __name__ == "__main__":
     app.run()
