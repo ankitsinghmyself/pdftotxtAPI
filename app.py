@@ -58,12 +58,14 @@ def index():
 			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 			text_file_path = filename
 			
-			return redirect(url_for('uploaded_file', filename=text_file_path))
+			# return redirect(url_for('uploaded_file', filename=text_file_path))
+			return uploaded_file(text_file_path)
 		else:
 			flash('Allowed file types is pdf')
 			return redirect(url_for('index'))
 	return render_template('index.html')
-@app.route('/tmp/<filename>')
+
+# @app.route('/tmp/<filename>')
 def uploaded_file(filename):
 	#convert function pdf to text
 	rsrcmgr = PDFResourceManager()
