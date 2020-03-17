@@ -42,12 +42,16 @@ ALLOWED_EXTENSIONS = set(['pdf'])
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 	
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
+	return render_template('index.html')
+
+@app.route('/upload', methods=['GET', 'POST'])
+def uploaded_file():
 	if request.method == 'POST':
         # check if the post request has the file part
 		if 'file' not in request.files:
-			flash('No file part')
+			#flash('No file part')
 			return redirect(url_for('index'))
 		file = request.files['file']
 		if file.filename == '':
@@ -57,36 +61,27 @@ def index():
 			filename = secure_filename(file.filename)
 			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 			text_file_path = filename
-			
-			# return redirect(url_for('uploaded_file', filename=text_file_path))
-			return uploaded_file(text_file_path)
+			rsrcmgr = PDFResourceManager()
+			retstr = StringIO()
+			laparams = LAParams()
+			device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+			pdf_file = "/tmp/" + filename
+			fp = open(pdf_file, 'rb')
+			interpreter = PDFPageInterpreter(rsrcmgr, device)
+			password = ""
+			maxpages = 0
+			caching = True
+			pagenos=set()
+			string=""
+			for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password,caching=caching, check_extractable=True):
+				interpreter.process_page(page)
+				#fp.close()
+				#device.close()
+				string = retstr.getvalue()
+				#retstr.close()
+			return string
 		else:
-			flash('Allowed file types is pdf')
+			#flash('Allowed file types is pdf')
 			return redirect(url_for('index'))
-	return render_template('index.html')
-
-# @app.route('/tmp/<filename>')
-def uploaded_file(filename):
-	#convert function pdf to text
-	rsrcmgr = PDFResourceManager()
-	retstr = StringIO()
-	laparams = LAParams()
-	device = TextConverter(rsrcmgr, retstr, laparams=laparams)
-	pdf_file = "/tmp/" + filename
-	fp = open(pdf_file, 'rb')
-	interpreter = PDFPageInterpreter(rsrcmgr, device)
-	password = ""
-	maxpages = 0
-	caching = True
-	pagenos=set()
-	string=""
-	for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password,caching=caching, check_extractable=True):
-
-		interpreter.process_page(page)
-		#fp.close()
-		#device.close()
-		string = retstr.getvalue()
-		#retstr.close()
-	return string
 if __name__ == "__main__":
-    app.run()
+    app.run(debug="true")
